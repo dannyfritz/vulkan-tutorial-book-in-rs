@@ -7,6 +7,7 @@
 The book is covering the stages of a Vulkan program.
 
 Roughly, it is grouping the API into 8 discrete stages:
+
 0. Physical Device Selection
 0. Logical Device and Queue Family
 0. Window Surface and Swap Chain
@@ -17,6 +18,7 @@ Roughly, it is grouping the API into 8 discrete stages:
 0. Main Loop
 
 In more Vulkan detail, it went on to list these API calls:
+
 0. Create a VkInstance
 0. Select a supported Graphics Card, VkPhysicalDevice
 0. Create a VkDevice and VkQueue
