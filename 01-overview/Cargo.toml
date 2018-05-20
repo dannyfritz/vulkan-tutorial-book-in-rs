@@ -1,0 +1,10 @@
+[package]
+name = "overview"
+version = "0.1.0"
+authors = ["Danny Fritz <dannyfritz@gmail.com>"]
+
+[dependencies]
+vulkano = ""
+vulkano-win = ""
+winit = ""
+# vulkano_shader_derive = ""
