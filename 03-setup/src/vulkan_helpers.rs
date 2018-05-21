@@ -1,5 +1,6 @@
 use std::sync::Arc;
-use vulkano::instance::{self, Features, Instance, InstanceExtensions, PhysicalDevice,
+use vulkano::device::{Device, DeviceExtensions, QueuesIter};
+use vulkano::instance::{self, Features, Instance, InstanceExtensions, PhysicalDevice, QueueFamily,
                         debug::DebugCallback};
 use vulkano::swapchain::Surface;
 use vulkano_win::{self, VkSurfaceBuild};
@@ -12,7 +13,7 @@ pub fn init_events_loop() -> winit::EventsLoop {
 pub fn init_vulkan(events_loop: &winit::EventsLoop) -> Arc<Surface<winit::Window>> {
     let instance = init_vulkan_instance();
     init_vulkan_debug_callbacks(instance.clone());
-    init_physical_device(instance.clone());
+    init_device(instance.clone());
     init_window()
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap()
@@ -93,16 +94,23 @@ fn init_vulkan_debug_callbacks(instance: Arc<Instance>) {
 #[cfg(not(feature = "vk_debug"))]
 fn init_vulkan_debug_callbacks(instance: Arc<Instance>) {}
 
-fn init_physical_device(instance: Arc<Instance>) {
+fn init_device(instance: Arc<Instance>) -> (Arc<Device>, QueuesIter) {
     println!("Picking PhysicalDevice");
-    let mut physical_devices = instance::PhysicalDevice::enumerate(&instance);
-    if physical_devices.len() == 0 {
-        panic!("No physical devices found!");
-    }
-    match physical_devices.find(|&device| is_device_suitable(device)) {
-        Some(device) => println!("{:?}", device),
-        None => panic!("No suitable device found!"),
-    }
+    let physical_device = instance::PhysicalDevice::enumerate(&instance)
+        .find(|&physical_device| is_device_suitable(physical_device))
+        .expect("No suitable physical device found!");
+    println!("Picking Queue Family");
+    let queue_family = physical_device
+        .queue_families()
+        .find(|qf| is_queue_suitable(qf))
+        .expect("No suitable queue family found!");
+    let features = Features::none();
+    Device::new(
+        physical_device,
+        &features,
+        &init_vulkan_device_extensions(physical_device),
+        Some((queue_family, 1.0)),
+    ).expect("Couldn't build device")
 }
 
 fn is_device_suitable(device: PhysicalDevice) -> bool {
@@ -124,4 +132,40 @@ fn is_device_suitable(device: PhysicalDevice) -> bool {
         device.driver_version(),
     );
     suitable
+}
+
+fn is_queue_suitable(queue_family: &QueueFamily) -> bool {
+    let suitable = queue_family.supports_graphics();
+    if suitable {
+        print!("  ✔️ ");
+    } else {
+        print!("  ❌ ");
+    }
+    println!(
+        "  id: {}, queues_count: {}, graphics: {}, compute: {}, transfers: {}, sparse_binding: {}",
+        queue_family.id(),
+        queue_family.queues_count(),
+        queue_family.supports_graphics(),
+        queue_family.supports_compute(),
+        queue_family.supports_transfers(),
+        queue_family.supports_sparse_binding(),
+    );
+    suitable
+}
+
+#[cfg(feature = "vk_debug")]
+fn init_vulkan_device_extensions(physical_device: PhysicalDevice) -> DeviceExtensions {
+    println!("Device Extensions:");
+    let mut extensions = DeviceExtensions::none();
+    extensions.ext_debug_marker = true;
+    let supported = DeviceExtensions::supported_by_device(physical_device);
+    print!("  ✔️ ");
+    println!("{:?}", supported.intersection(&extensions));
+    print!("  ❌ ");
+    println!("{:?}", supported.difference(&extensions));
+    extensions
+}
+#[cfg(not(feature = "vk_debug"))]
+fn init_vulkan_device_extensions() -> DeviceExtensions {
+    DeviceExtensions::none()
 }

@@ -42,7 +42,13 @@ https://github.com/vulkano-rs/vulkano/issues/336
 
 Setting up the `DebugCallback` was a breeze with Rust.
 
-### Physical Devices and Queue Familes
+### Physical Devices and Queue Families
+
+I don't have a great grasp on PhysicalDevice vs Device yet.
+
+Queues seem like a really cool abstraction.
+
+My device only has one physical device and one queue, so kind of boring to play with the iterators.
 
 ## Random Thoughts
 
