@@ -38,14 +38,20 @@ impl Application {
             let extensions = vulkano_win::required_extensions();
             let supported = InstanceExtensions::supported_by_core().unwrap();
             println!("Instance Extensions:");
-            println!("  required:  {:?}", extensions);
-            println!("  supported: {:?}", supported);
-            println!("  unused:    {:?}", supported.difference(&extensions));
-            //INFO (danny): https://github.com/vulkano-rs/vulkano/issues/336
-            let layers = Application::init_vulkan_layers();
-            let layers: Vec<&str> = layers.iter().map(|ln| ln.as_str()).collect();
-            Instance::new(None, &extensions, layers.iter())
-                .expect("failed to create Vulkan instance")
+            print!("  ✔️ ");
+            println!("{:?}", supported.intersection(&extensions));
+            print!("  ❌ ");
+            println!("{:?}", supported.difference(&extensions));
+            Instance::new(
+                None,
+                &extensions,
+                //INFO (danny): https://github.com/vulkano-rs/vulkano/issues/336
+                Application::init_vulkan_layers()
+                    .iter()
+                    .map(|ln| ln.as_str())
+                    .collect::<Vec<&str>>()
+                    .iter(),
+            ).expect("failed to create Vulkan instance")
         };
         Application::init_window()
             .build_vk_surface(&events_loop, instance.clone())
@@ -53,30 +59,25 @@ impl Application {
     }
     #[cfg(feature = "vk_debug")]
     fn init_vulkan_layers() -> Vec<String> {
-        println!("Available layers:");
-        instance::layers_list().unwrap().for_each(|layer| {
-            println!(
-                "  {}@{} - {}",
-                layer.name(),
-                layer.implementation_version(),
-                layer.description()
-            );
-        });
-        println!("Activated layers:");
+        println!("Layers:");
         instance::layers_list()
             .unwrap()
-            .filter(|l| l.name().contains("RENDERDOC") || l.name().contains("LUNARG"))
-            .for_each(|layer| {
+            .filter(|layer| {
+                let name = layer.name();
+                let to_activate = name.contains("RENDERDOC") || name.contains("LUNARG");
+                if to_activate {
+                    print!("  ✔️ ");
+                } else {
+                    print!("  ❌ ");
+                }
                 println!(
-                    "  {}@{} - {}",
+                    "{} @ {} - {}",
                     layer.name(),
                     layer.implementation_version(),
                     layer.description()
                 );
-            });
-        instance::layers_list()
-            .unwrap()
-            .filter(|l| l.name().contains("RENDERDOC") || l.name().contains("LUNARG"))
+                to_activate
+            })
             .map(|l| String::from(l.name()))
             .collect()
     }
