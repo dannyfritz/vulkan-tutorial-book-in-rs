@@ -4,4 +4,5 @@ Will be taking notes and following along with https://vulkan-tutorial.com/ , but
 
 ## Status
 
-Currently at https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Base_code
+Currently at: 
+https://vulkan-tutorial.com/Drawing_a_triangle/Setup/Validation_layers#page_Message_callback
