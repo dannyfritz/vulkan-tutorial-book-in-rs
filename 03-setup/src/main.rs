@@ -1,11 +1,12 @@
-#[macro_use]
+// #[macro_use]
 extern crate vulkano;
 // #[macro_use]
 // extern crate vulkano_shader_derive;
 extern crate vulkano_win;
 extern crate winit;
 
-use vulkano::instance::{self, Instance, InstanceExtensions, LayersIterator};
+use std::sync::Arc;
+use vulkano::instance::{self, Instance, InstanceExtensions, debug::DebugCallback};
 use vulkano::swapchain::Surface;
 use vulkano_win::VkSurfaceBuild;
 
@@ -35,16 +36,9 @@ impl Application {
         events_loop: &winit::EventsLoop,
     ) -> std::sync::Arc<vulkano::swapchain::Surface<winit::Window>> {
         let instance = {
-            let extensions = vulkano_win::required_extensions();
-            let supported = InstanceExtensions::supported_by_core().unwrap();
-            println!("Instance Extensions:");
-            print!("  ✔️ ");
-            println!("{:?}", supported.intersection(&extensions));
-            print!("  ❌ ");
-            println!("{:?}", supported.difference(&extensions));
             Instance::new(
                 None,
-                &extensions,
+                &Application::init_vulkan_instance_extensions(),
                 //INFO (danny): https://github.com/vulkano-rs/vulkano/issues/336
                 Application::init_vulkan_layers()
                     .iter()
@@ -53,6 +47,7 @@ impl Application {
                     .iter(),
             ).expect("failed to create Vulkan instance")
         };
+        Application::init_vulkan_debug_callbacks(&instance.clone());
         Application::init_window()
             .build_vk_surface(&events_loop, instance.clone())
             .unwrap()
@@ -85,6 +80,31 @@ impl Application {
     fn init_vulkan_layers() -> Vec<String> {
         vec![]
     }
+    #[cfg(feature = "vk_debug")]
+    fn init_vulkan_instance_extensions() -> InstanceExtensions {
+        println!("Instance Extensions:");
+        let mut extensions = vulkano_win::required_extensions();
+        extensions.ext_debug_report = true;
+        let supported = InstanceExtensions::supported_by_core().unwrap();
+        print!("  ✔️ ");
+        println!("{:?}", supported.intersection(&extensions));
+        print!("  ❌ ");
+        println!("{:?}", supported.difference(&extensions));
+        extensions
+    }
+    #[cfg(not(feature = "vk_debug"))]
+    fn init_vulkan_instance_extensions() -> InstanceExtensions {
+        vulkano_win::required_extensions()
+    }
+    #[cfg(feature = "vk_debug")]
+    fn init_vulkan_debug_callbacks(instance: &Arc<Instance>) {
+        println!("Setting Up Debug Callbacks.");
+        DebugCallback::errors_and_warnings(&instance, |msg| {
+            println!("Debug callback: {:?}", msg.description);
+        }).ok();
+    }
+    #[cfg(not(feature = "vk_debug"))]
+    fn init_vulkan_debug_callbacks(instance: &Arc<Instance>) {}
     fn run(&mut self) {
         self.main_loop();
         self.cleanup();

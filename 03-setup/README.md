@@ -36,7 +36,13 @@ Guide is using C++'s `#ifdef DEBUG` to do something when in `DEBUG` mode.
 Rust doesn't have a direct analog, but can achieve this with `[features]` and `[cfg(feature="vk_debug")]`.
 Then if you want to run with `debug` set, `cargo run --features "vk_debug"`
 
-Getting the [`layers_list()`](https://docs.rs/vulkano/0.9.0/vulkano/instance/fn.layers_list.html) into the `Instance::new` method was really painful! https://github.com/vulkano-rs/vulkano/issues/336
+Getting the [`layers_list()`](https://docs.rs/vulkano/0.9.0/vulkano/instance/fn.layers_list.html) into the `Instance::new` method was really painful! 
+I mean like really really painful.
+https://github.com/vulkano-rs/vulkano/issues/336
+
+Setting up the `DebugCallback` was a breeze with Rust.
+
+### Physical Devices and Queue Familes
 
 ## Random Thoughts
 
