@@ -1,5 +1,6 @@
 use std::sync::Arc;
-use vulkano::instance::{self, Instance, InstanceExtensions, debug::DebugCallback};
+use vulkano::instance::{self, Features, Instance, InstanceExtensions, PhysicalDevice,
+                        debug::DebugCallback};
 use vulkano::swapchain::Surface;
 use vulkano_win::{self, VkSurfaceBuild};
 use winit;
@@ -10,7 +11,8 @@ pub fn init_events_loop() -> winit::EventsLoop {
 
 pub fn init_vulkan(events_loop: &winit::EventsLoop) -> Arc<Surface<winit::Window>> {
     let instance = init_vulkan_instance();
-    init_vulkan_debug_callbacks(&instance.clone());
+    init_vulkan_debug_callbacks(instance.clone());
+    init_physical_device(instance.clone());
     init_window()
         .build_vk_surface(&events_loop, instance.clone())
         .unwrap()
@@ -82,11 +84,44 @@ fn init_vulkan_layers() -> Vec<String> {
 }
 
 #[cfg(feature = "vk_debug")]
-fn init_vulkan_debug_callbacks(instance: &Arc<Instance>) {
+fn init_vulkan_debug_callbacks(instance: Arc<Instance>) {
     println!("Setting Up Debug Callbacks.");
     DebugCallback::errors_and_warnings(&instance, |msg| {
         println!("Debug callback: {:?}", msg.description);
     }).ok();
 }
 #[cfg(not(feature = "vk_debug"))]
-fn init_vulkan_debug_callbacks(instance: &Arc<Instance>) {}
+fn init_vulkan_debug_callbacks(instance: Arc<Instance>) {}
+
+fn init_physical_device(instance: Arc<Instance>) {
+    println!("Picking PhysicalDevice");
+    let mut physical_devices = instance::PhysicalDevice::enumerate(&instance);
+    if physical_devices.len() == 0 {
+        panic!("No physical devices found!");
+    }
+    match physical_devices.find(|&device| is_device_suitable(device)) {
+        Some(device) => println!("{:?}", device),
+        None => panic!("No suitable device found!"),
+    }
+}
+
+fn is_device_suitable(device: PhysicalDevice) -> bool {
+    let minimal_features = Features {
+        geometry_shader: true,
+        ..Features::none()
+    };
+    let suitable = device.supported_features().superset_of(&minimal_features);
+    if suitable {
+        print!("  ✔️ ");
+    } else {
+        print!("  ❌ ");
+    }
+    println!(
+        "{}, type: {:?}\n      supports: {}, driver: {}",
+        device.name(),
+        device.ty(),
+        device.api_version(),
+        device.driver_version(),
+    );
+    suitable
+}
