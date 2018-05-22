@@ -3,4 +3,5 @@ members = [
   "01-overview",
   "02-dev-environment",
   "03-setup",
+  "04-presentation",
 ]
