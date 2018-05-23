@@ -1,0 +1,17 @@
+[package]
+name = "graphics_pipeline_basics"
+version = "0.1.0"
+authors = ["Danny Fritz <dannyfritz@gmail.com>"]
+
+[dependencies]
+vulkano = "0.9"
+vulkano-win = "0.9"
+vulkano-shaders = "0.9.0"
+glsl-to-spirv = "0.1.4"
+# vulkano-shader-derive = "0.9.0"
+winit = "0.11"
+nalgebra = "0.14"
+
+[features]
+default = ["vk_debug"]
+vk_debug = []

@@ -4,4 +4,5 @@ members = [
   "02-dev-environment",
   "03-setup",
   "04-presentation",
+  "05-graphics-pipeline-basics"
 ]
